@@ -1,0 +1,42 @@
+resources:
+- name: repo
+  type: git
+  icon: github-circle
+  source:
+    branch: master
+    uri: https://github.com/cappyzawa/docker-image-resource
+- name: image-based-on-custom
+  type: cappyzawa-docker
+  icon: docker
+  source: &docker-source
+    repository: cappyzawa/docker-image-resource
+    username: cappyzawa
+    password: ((docker-hub-password))
+- name: image-based-on-core
+  type: docker-image
+  icon: docker
+  source: *docker-source
+
+resource_types:
+- name: cappyzawa-docker
+  type: registry-image
+  privileged: true
+  source:
+    repository: cappyzawa/docker-image-resource
+    tag: latest
+
+jobs:
+- name: publish-image-custom
+  plan:
+  - get: repo
+    trigger: true
+  - put: image-based-on-custom
+    params: &image-put-params
+      build: repo
+      dockerfile: repo/dockerfiles/alpine/Dockerfile
+- name: publish-image-core
+  plan:
+  - get: repo
+    trigger: true
+  - put: image-based-on-core
+    params: *image-put-params
